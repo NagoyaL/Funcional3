@@ -1,4 +1,3 @@
-import java.util.function.IntToDoubleFunction
 
 package object Huffman {
  abstract class ArbolH
@@ -22,19 +21,12 @@ package object Huffman {
  // Parte 2: Construyendo arboles de Huffman
   def cadenaALista (cad: String): List[Char] = cad.toList
 
-  def ocurrencias(cars: List [Char]): List [(Char, Int)] = {
-   cars match {
+ def ocurrencias(cars: List[Char]): List[(Char, Int)] = {
+  cars match {
     case Nil => Nil
-    case c :: tail =>
-     val lista = List[(Char, Int)]
-     if (!lista.contains(c)) {
-      (c, cars.count(_ == c)) :: ocurrencias(tail)
-     } else {
-      ocurrencias(tail)
-     }
-   }
-    // cars.distinct.map(c => (c, cars.count(_ == c))) // .distinct devuelve una lista sin elementos repetidos
+    case x :: xs => (x, xs.count(_ == x) + 1) :: ocurrencias(xs.filter(_ != x))
   }
+ }
 
 
  // Funcion que devuelve una lista de hojas ordenadas por peso
@@ -69,20 +61,34 @@ package object Huffman {
   }
  }
 
- def combinar (arboles: List[ArbolH]): List[ArbolH] = {
-    arboles match {
-      case a :: b :: tail => hacerNodoArbolH(a, b) :: tail
-      case _ => arboles
-    }
+ def combinar(arboles: List[ArbolH]): List[ArbolH] = {
+  def insertarOrdenado(arbol: ArbolH, lista: List[ArbolH]): List[ArbolH] = lista match {
+   case Nil => List(arbol)
+   case h :: tail =>
+    if (peso(arbol) <= peso(h)) arbol :: lista
+    else h :: insertarOrdenado(arbol, tail)
+  }
+
+  arboles match {
+    case Nil => Nil
+    case arbol :: Nil => List(arbol)
+    case arbol1 :: arbol2 :: tail =>
+      insertarOrdenado(hacerNodoArbolH(arbol1, arbol2), tail)
+   }
  }
+
+
 
  def hastaQue(cond: List[ArbolH] => Boolean, mezclar: List[ArbolH] => List [ArbolH])
               (listaOrdenadaArboles: List[ArbolH]): List [ArbolH] = {
-
+  listaOrdenadaArboles match {
+   case xs if cond(xs) => xs
+   case xs => hastaQue(cond, mezclar)(mezclar(xs))
+  }
  }
 
  def crearArbolDeHuffman(cars: List[Char]): ArbolH = {
-
+  hastaQue(listaUnitaria, combinar)(listaDeHojasOrdenadas(ocurrencias(caracteres))).head
  }
 
  type Bit = Int

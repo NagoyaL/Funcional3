@@ -1,4 +1,4 @@
-import Huffman
+import main.scala.Huffman._
 
 val arbolEjemplo = hacerNodoArbolH(
   hacerNodoArbolH(Hoja ('x', 1 ), Hoja ('e', 1'))
