@@ -93,31 +93,67 @@ package object Huffman {
 
  type Bit = Int
 
- def decodificar(arbol: ArbolH, bits: List[Bit]): List [Bit] = {
-
+ def decodificar(arbol: ArbolH, bits: List[Bit]): List[Char] = {
+  def decodificarRec(subarbol: ArbolH, bits: List[Bit], resultado: List[Char]): List[Char] = (subarbol, bits) match {
+   case (Hoja(c, _), _) => decodificarRec(arbol, bits, resultado :+ c)
+   case (Nodo(izq, der, _, _), b :: bs) => {
+    val siguienteSubarbol = if (b == 0) izq else der
+    decodificarRec(siguienteSubarbol, bs, resultado)
+   }
+   case (_, Nil) => resultado
+  }
+  decodificarRec(arbol, bits, Nil)
  }
 
  def codificar(arbol: ArbolH)(texto: List[Char]): List[Bit] = {
+  def codificarChar(c: Char, a: ArbolH): List[Bit] = a match {
+   case Hoja(_, _) => Nil
+   case Nodo(izq, der, _, _) =>
+    if (cars(izq).contains(c)) 0 :: codificarChar(c, izq)
+    else 1 :: codificarChar(c, der)
+  }
 
+  texto match {
+   case Nil => Nil
+   case x :: xs => codificarChar(x, arbol) ::: codificar(arbol)(xs)
+  }
  }
 
 
   type TablaCodigos = List [(Char, List [Bit])]
 
   def codigoEnBits(tabla: TablaCodigos)(car: Char): List[Bit] = {
-
+   case Nil => Nil
+   case (x, bits) :: xs => if (x == c) bits else codigoEnBits(xs)(c)
   }
 
   def mezclarTablasDeCodigos(a: TablaCodigos, b: TablaCodigos): TablaCodigos ={
+   def agregarPrefijo(bits: List[Bit], tabla: TablaCodigos): TablaCodigos = tabla match {
+    case Nil => Nil
+    case (c, bs) :: t => (c, bits ++ bs) :: agregarPrefijo(bits, t)
+   }
 
+   agregarPrefijo(List(0), a) ++ agregarPrefijo(List(1), b)
   }
 
   def convertir (arbol: ArbolH): TablaCodigos = {
-
+   case Hoja(c) => List((c, Nil))
+   case Nodo(izq, der, _, _) =>
+    mezclarTablasDeCodigos(convertir(izq), convertir(der))
   }
 
   def codificarRapido (arbol: ArbolH)(texto: List[Char]): List[Bit] = {
+   def buscar(tabla: TablaCodigos)(c: Char): List[Bit] = tabla match {
+    case (`c`, bits) :: _ => bits
+    case _ :: resto => buscar(resto)(c)
+   }
 
+   val tabla = convertir(arbol)
+
+   mensaje match {
+    case Nil => Nil
+    case c :: resto => buscar(tabla)(c) ::: codificarRapido(arbol)(resto)
+   }
   }
 
 
