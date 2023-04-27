@@ -1,8 +1,10 @@
 
 package object Huffman {
- abstract class ArbolH
+ abstract class ArbolH {
   case class Nodo(izq: ArbolH, der: ArbolH, cars: List[Char], peso: Int) extends ArbolH
   case class Hoja(car: Char, peso: Int) extends ArbolH
+
+ }
 
  // Parte 1: Funciones esenciales y sencillas
   def peso(arbol: ArbolH): Int = arbol match {
@@ -88,7 +90,7 @@ package object Huffman {
  }
 
  def crearArbolDeHuffman(cars: List[Char]): ArbolH = {
-  hastaQue(listaUnitaria, combinar)(listaDeHojasOrdenadas(ocurrencias(caracteres))).head
+  hastaQue(listaUnitaria, combinar)(listaDeHojasOrdenadas(ocurrencias(cars))).head
  }
 
  type Bit = Int
@@ -123,8 +125,10 @@ package object Huffman {
   type TablaCodigos = List [(Char, List [Bit])]
 
   def codigoEnBits(tabla: TablaCodigos)(car: Char): List[Bit] = {
-   case Nil => Nil
-   case (x, bits) :: xs => if (x == c) bits else codigoEnBits(xs)(c)
+    tabla match {
+      case Nil => Nil
+      case (c, bits) :: cs => if (c == car) bits else codigoEnBits(cs)(car)
+    }
   }
 
   def mezclarTablasDeCodigos(a: TablaCodigos, b: TablaCodigos): TablaCodigos ={
@@ -137,9 +141,11 @@ package object Huffman {
   }
 
   def convertir (arbol: ArbolH): TablaCodigos = {
-   case Hoja(c) => List((c, Nil))
-   case Nodo(izq, der, _, _) =>
-    mezclarTablasDeCodigos(convertir(izq), convertir(der))
+    arbol match {
+     case Hoja(c, _) => List((c, Nil))
+     case Nodo(izq, der, _, _) =>
+      mezclarTablasDeCodigos(convertir(izq), convertir(der))
+    }
   }
 
   def codificarRapido (arbol: ArbolH)(texto: List[Char]): List[Bit] = {
@@ -150,7 +156,7 @@ package object Huffman {
 
    val tabla = convertir(arbol)
 
-   mensaje match {
+   texto match {
     case Nil => Nil
     case c :: resto => buscar(tabla)(c) ::: codificarRapido(arbol)(resto)
    }
